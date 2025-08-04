@@ -11,8 +11,7 @@ const Navbar = () => {
     try {
       const token = localStorage.getItem("token");
       if (token) {
-        // Call backend logout endpoint
-        await axios.post("http://localhost:5000/logout", {}, {
+        await axios.post("/api/logout", {}, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -22,14 +21,12 @@ const Navbar = () => {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      // Clear local storage and redirect regardless of backend response
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       navigate("/login");
     }
   };
 
-  // Get user info for display
   const getUserInfo = () => {
     const userStr = localStorage.getItem("user");
     if (userStr) {

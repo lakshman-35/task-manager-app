@@ -3,18 +3,18 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { router: taskRoutes, initializeRouter } = require('./routes/taskRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-const JWT_SECRET = 'your-secret-key-here';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
 const db = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: '',
-  database: 'taskmate'
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'taskmate'
 });
 
 db.connect((err) => {
@@ -25,7 +25,6 @@ db.connect((err) => {
     createTokensTable();
   }
 });
-
 
 const createTokensTable = () => {
   const createTableSQL = `
@@ -48,16 +47,14 @@ const createTokensTable = () => {
   });
 };
 
-
 const generateToken = (userId) => {
   const payload = {
     userId,
     iat: Math.floor(Date.now() / 1000),
-    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60 // 24h
+    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60
   };
   return jwt.sign(payload, JWT_SECRET);
 };
-
 
 const storeToken = (userId, token) => {
   const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
@@ -70,8 +67,7 @@ const storeToken = (userId, token) => {
   });
 };
 
-
-app.post('/register', async (req, res) => {
+app.post('/api/register', async (req, res) => {
   const { fullName, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -89,8 +85,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-
-app.post('/login', async (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const findUserSQL = 'SELECT * FROM users WHERE email = ?';
@@ -130,11 +125,9 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ message: 'Access token required' });
-
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const checkTokenSQL = 'SELECT * FROM tokens WHERE token = ? AND is_active = TRUE AND expires_at > NOW()';
@@ -155,8 +148,7 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-// Profile route
-app.get('/profile', verifyToken, (req, res) => {
+app.get('/api/profile', verifyToken, (req, res) => {
   const sql = 'SELECT id, full_name, email FROM users WHERE id = ?';
   db.query(sql, [req.userId], (err, results) => {
     if (err || results.length === 0) {
@@ -166,8 +158,7 @@ app.get('/profile', verifyToken, (req, res) => {
   });
 });
 
-// Logout
-app.post('/logout', verifyToken, (req, res) => {
+app.post('/api/logout', verifyToken, (req, res) => {
   const token = req.headers.authorization?.split(' ')[1];
   const deactivateTokenSQL = 'UPDATE tokens SET is_active = FALSE WHERE token = ?';
   db.query(deactivateTokenSQL, [token], (err) => {
@@ -179,13 +170,11 @@ app.post('/logout', verifyToken, (req, res) => {
   });
 });
 
-// Initialize task routes with database and middleware
-initializeRouter(db, verifyToken);
+app.use('/api/tasks', verifyToken, taskRoutes);
 
-// Use task routes
-app.use('/tasks', taskRoutes);
-
-// Start server
-app.listen(5000, () => {
-  console.log('Server running at http://localhost:5000');
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
+
+module.exports = app;

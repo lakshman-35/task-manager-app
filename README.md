@@ -1,103 +1,63 @@
-# TaskMate - JWT Authentication Task Management App
+# TaskManager - Full Stack Task Management Application
 
-A full-stack task management application with JWT authentication, built with React.js frontend and Node.js backend.
+A modern, responsive task management application built with React.js frontend and Node.js/Express.js backend with MySQL database.
 
 ## Features
 
-- 🔐 **JWT Authentication**: Secure login/logout with token-based authentication
-- 📝 **Task Management**: Create, read, update, and delete tasks
-- 👤 **User-specific Tasks**: Each user can only see and manage their own tasks
-- 🔍 **Search & Filter**: Search tasks by title/description and filter by status
-- 📊 **Dashboard Statistics**: Real-time task counts and status overview
-- 🎨 **Modern UI**: Clean, responsive design with intuitive user interface
-- 🔒 **Protected Routes**: Secure access to authenticated users only
-
-## User-Specific Task Management
-
-### How It Works
-
-1. **User Authentication**: When a user logs in, a JWT token is generated and stored in the database
-2. **Token Verification**: All API requests include the JWT token in the Authorization header
-3. **User Isolation**: The backend verifies the token and only returns tasks belonging to that specific user
-4. **Personalized UI**: The frontend displays the user's name and shows personalized messages
-
-### Security Features
-
-- **Token-based Authentication**: JWT tokens with 24-hour expiration
-- **Database Token Storage**: Tokens stored in database with active/inactive status
-- **User Ownership Verification**: All task operations verify user ownership
-- **Automatic Logout**: Expired tokens automatically redirect to login
-
-### User Experience
-
-- **Personalized Welcome**: Dashboard shows "Welcome back, [User Name]!"
-- **User-specific Tasks**: Only the logged-in user's tasks are displayed
-- **Navbar User Display**: Shows "Welcome, [User Name]" in the navigation bar
-- **Task Ownership**: Users can only edit/delete their own tasks
+- 🔐 **JWT Authentication** - Secure user registration and login
+- 📝 **Task Management** - Create, read, update, and delete tasks
+- 👤 **User-Specific Tasks** - Each user sees only their own tasks
+- 🎨 **Modern UI** - Beautiful, responsive design with professional styling
+- 🔍 **Search & Filter** - Find tasks quickly with search and status filtering
+- 📊 **Dashboard Analytics** - View task statistics and progress
+- 📱 **Mobile Responsive** - Works perfectly on all devices
 
 ## Tech Stack
 
-### Backend
-- **Node.js** with Express.js
-- **MySQL** database
-- **JWT** for authentication
-- **bcryptjs** for password hashing
-- **CORS** for cross-origin requests
-
 ### Frontend
-- **React.js** with hooks
-- **React Router** for navigation
-- **Axios** for HTTP requests
-- **React Icons** for UI icons
-- **Local Storage** for token persistence
+- React.js 18
+- React Router DOM
+- Axios for API calls
+- React Icons
+- CSS3 with modern styling
 
-## Database Schema
+### Backend
+- Node.js
+- Express.js
+- MySQL database
+- JWT for authentication
+- bcryptjs for password hashing
+- CORS enabled
 
-### Users Table
-- `id` (Primary Key)
-- `full_name` (VARCHAR)
-- `email` (VARCHAR, Unique)
-- `password` (VARCHAR, Hashed)
-- `created_at` (TIMESTAMP)
+## Project Structure
 
-### Tokens Table
-- `id` (Primary Key)
-- `user_id` (Foreign Key to users.id)
-- `token` (TEXT, JWT token)
-- `created_at` (TIMESTAMP)
-- `expires_at` (TIMESTAMP)
-- `is_active` (BOOLEAN)
+```
+taskname/
+├── backend/
+│   ├── server.js          # Main server file
+│   ├── routes/
+│   │   └── taskRoutes.js  # Task API routes
+│   ├── package.json       # Backend dependencies
+│   └── db.js             # Database connection
+├── frontend/
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── App.js         # Main app component
+│   │   └── index.js       # App entry point
+│   └── package.json       # Frontend dependencies
+├── vercel.json           # Vercel deployment config
+└── README.md             # This file
+```
 
-### Tasks Table
-- `id` (Primary Key)
-- `title` (VARCHAR)
-- `description` (TEXT)
-- `status` (ENUM: 'To Do', 'In Progress', 'Done')
-- `priority` (ENUM: 'Low', 'Medium', 'High')
-- `due_date` (DATE)
-- `user_id` (Foreign Key to users.id)
-- `created_at` (TIMESTAMP)
-- `updated_at` (TIMESTAMP)
-
-## Setup Instructions
+## Local Development Setup
 
 ### Prerequisites
-- Node.js (v14 or higher)
-- MySQL (v8.0 or higher)
+- Node.js (v18 or higher)
+- MySQL database
 - npm or yarn
 
-### 1. Database Setup
-
-1. Start your MySQL server
-2. Run the database setup script:
-   ```bash
-   mysql -u root -p < backend/database_setup.sql
-   ```
-   Or copy and paste the contents of `backend/database_setup.sql` into your MySQL client.
-
-### 2. Backend Setup
-
-1. Navigate to the backend directory:
+### Backend Setup
+1. Navigate to backend directory:
    ```bash
    cd backend
    ```
@@ -107,25 +67,17 @@ A full-stack task management application with JWT authentication, built with Rea
    npm install
    ```
 
-3. Update database configuration in `db.js`:
-   ```javascript
-   const db = mysql.createConnection({
-     host: 'localhost',
-     user: 'your_mysql_username',
-     password: 'your_mysql_password',
-     database: 'taskmate'
-   });
-   ```
+3. Set up MySQL database:
+   - Create a database named `taskmate`
+   - Run the SQL commands from `database_setup.sql`
 
 4. Start the backend server:
    ```bash
    npm start
    ```
-   The server will run on `http://localhost:5000`
 
-### 3. Frontend Setup
-
-1. Navigate to the frontend directory:
+### Frontend Setup
+1. Navigate to frontend directory:
    ```bash
    cd frontend
    ```
@@ -135,93 +87,72 @@ A full-stack task management application with JWT authentication, built with Rea
    npm install
    ```
 
-3. Start the frontend development server:
+3. Start the development server:
    ```bash
    npm start
    ```
-   The app will run on `http://localhost:3000`
 
-## Usage
+## Deployment on Vercel
 
-### Registration
-1. Navigate to `/register`
-2. Enter your full name, email, and password
-3. Click "Sign Up"
+### Prerequisites
+- Vercel account
+- MySQL database (you can use PlanetScale, Railway, or any cloud MySQL provider)
 
-### Login
-1. Navigate to `/login`
-2. Enter your email and password
-3. Click "Sign In"
-4. You'll be automatically redirected to the dashboard
+### Step 1: Database Setup
+1. Set up a MySQL database on your preferred cloud provider
+2. Note down the connection details (host, user, password, database name)
 
-### Task Management
-- **Create Task**: Click "New Task" button
-- **Edit Task**: Click the edit icon on any task card
-- **Delete Task**: Click the delete icon on any task card
-- **Search**: Use the search bar to find specific tasks
-- **Filter**: Use the status dropdown to filter tasks
+### Step 2: Environment Variables
+In your Vercel project settings, add these environment variables:
+- `JWT_SECRET` - Your JWT secret key
+- `DB_HOST` - Your MySQL host
+- `DB_USER` - Your MySQL username
+- `DB_PASSWORD` - Your MySQL password
+- `DB_NAME` - Your database name
 
-### Logout
-Click the "Logout" button in the navigation bar to securely log out.
+### Step 3: Deploy
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Vercel will automatically detect the configuration and deploy
+
+### Step 4: Database Migration
+After deployment, you'll need to create the database tables. You can do this by:
+1. Connecting to your MySQL database
+2. Running the SQL commands from `database_setup.sql`
 
 ## API Endpoints
 
 ### Authentication
-- `POST /register` - User registration
-- `POST /login` - User login
-- `POST /logout` - User logout (requires token)
-- `GET /profile` - Get user profile (requires token)
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+- `GET /api/profile` - Get user profile
 
-### Tasks (All require authentication)
-- `GET /tasks` - Get all tasks for the authenticated user
-- `POST /tasks` - Create a new task
-- `PUT /tasks/:id` - Update a task
-- `DELETE /tasks/:id` - Delete a task
-
-## Security Features
-
-- **Password Hashing**: All passwords are hashed using bcrypt
-- **JWT Tokens**: Secure token-based authentication
-- **Token Storage**: Tokens are stored in the database with expiration
-- **User Isolation**: Users can only access their own tasks
-- **Token Validation**: Server-side token verification on all protected routes
-- **Automatic Logout**: Expired tokens automatically redirect to login
+### Tasks
+- `GET /api/tasks` - Get user's tasks
+- `POST /api/tasks` - Create new task
+- `PUT /api/tasks/:id` - Update task
+- `DELETE /api/tasks/:id` - Delete task
 
 ## Environment Variables
 
-For production, consider setting these environment variables:
-
-```bash
-JWT_SECRET=your-super-secret-jwt-key
+### Development
+Create a `.env` file in the backend directory:
+```env
+JWT_SECRET=your-secret-key-here
 DB_HOST=localhost
-DB_USER=your_db_user
-DB_PASSWORD=your_db_password
+DB_USER=root
+DB_PASSWORD=
 DB_NAME=taskmate
 ```
 
-## Testing
-
-The database setup includes a test user:
-- **Email**: test@example.com
-- **Password**: password123
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Error**
-   - Ensure MySQL is running
-   - Check database credentials in `db.js`
-   - Verify the `taskmate` database exists
-
-2. **JWT Token Errors**
-   - Clear browser localStorage
-   - Check if the token has expired
-   - Verify the JWT_SECRET is consistent
-
-3. **CORS Errors**
-   - Ensure the backend is running on port 5000
-   - Check that CORS is properly configured
+### Production (Vercel)
+Set these in your Vercel project settings:
+- `JWT_SECRET`
+- `DB_HOST`
+- `DB_USER`
+- `DB_PASSWORD`
+- `DB_NAME`
 
 ## Contributing
 
@@ -233,4 +164,8 @@ The database setup includes a test user:
 
 ## License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
+
+## Support
+
+If you encounter any issues or have questions, please open an issue on GitHub. 

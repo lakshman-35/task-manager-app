@@ -37,7 +37,7 @@ const TaskManager = () => {
 
   const fetchTasks = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/tasks", {
+      const response = await axios.get("/api/tasks", {
         headers: getAuthHeaders()
       });
       setTasks(response.data);
@@ -68,7 +68,7 @@ const TaskManager = () => {
 
   const handleTaskDeleted = async (id) => {
     try {
-      await axios.delete(`http://localhost:5000/tasks/${id}`, {
+      await axios.delete(`/api/tasks/${id}`, {
         headers: getAuthHeaders()
       });
       fetchTasks();

@@ -1,17 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { FaPlus, FaEdit, FaSave } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { FaPlus, FaEdit, FaSave } from "react-icons/fa";
+import "./TaskForm.css";
 
-function TaskForm({ onTaskAdded, editingTask }) {
+const TaskForm = ({ onTaskAdded, editingTask }) => {
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    status: 'To Do',
-    priority: 'Low',
-    dueDate: ''
+    title: "",
+    description: "",
+    status: "To Do",
+    priority: "Medium",
+    dueDate: ""
   });
 
-  // Get token from localStorage
+  useEffect(() => {
+    if (editingTask) {
+      setFormData({
+        title: editingTask.title || "",
+        description: editingTask.description || "",
+        status: editingTask.status || "To Do",
+        priority: editingTask.priority || "Medium",
+        dueDate: editingTask.due_date ? editingTask.due_date.slice(0, 10) : ""
+      });
+    }
+  }, [editingTask]);
+
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return {
@@ -20,40 +32,31 @@ function TaskForm({ onTaskAdded, editingTask }) {
     };
   };
 
-  // Populate form when editing
-  useEffect(() => {
-    if (editingTask) {
-      setFormData({
-        title: editingTask.title || '',
-        description: editingTask.description || '',
-        status: editingTask.status || 'To Do',
-        priority: editingTask.priority || 'Low',
-        dueDate: editingTask.due_date ? editingTask.due_date.slice(0, 10) : ''
-      });
-    }
-  }, [editingTask]);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
+      const taskData = {
+        title: formData.title,
+        description: formData.description,
+        status: formData.status,
+        priority: formData.priority,
+        dueDate: formData.dueDate
+      };
+
       if (editingTask) {
-        // Update existing task
-        await axios.put(`http://localhost:5000/tasks/${editingTask.id}`, formData, {
+        await axios.put(`/api/tasks/${editingTask.id}`, taskData, {
           headers: getAuthHeaders()
         });
       } else {
-        // Create new task
-        await axios.post('http://localhost:5000/tasks', formData, {
+        await axios.post("/api/tasks", taskData, {
           headers: getAuthHeaders()
         });
       }
-      
-      // Reset form
-      setFormData({ title: '', description: '', status: 'To Do', priority: 'Low', dueDate: '' });
+
       onTaskAdded();
     } catch (error) {
-      console.error('Error saving task:', error);
+      console.error("Error saving task:", error);
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
@@ -62,41 +65,52 @@ function TaskForm({ onTaskAdded, editingTask }) {
     }
   };
 
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="task-form-container">
       <div className="form-header">
         <div className="form-icon">
           {editingTask ? <FaEdit /> : <FaPlus />}
         </div>
-        <h2 className="form-title">
-          {editingTask ? 'Edit Task' : 'Create New Task'}
-        </h2>
-        <p className="form-subtitle">
-          {editingTask ? 'Update your task details below' : 'Add a new task to your dashboard'}
-        </p>
+        <div className="form-title-section">
+          <h2 className="form-title">
+            {editingTask ? "Edit Task" : "Create New Task"}
+          </h2>
+          <p className="form-subtitle">
+            {editingTask ? "Update your task details" : "Add a new task to your list"}
+          </p>
+        </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="task-form">
+      <form className="task-form" onSubmit={handleSubmit}>
         <div className="form-group">
-          <label className="form-label">Task Title *</label>
+          <label className="form-label">Task Title</label>
           <input
             type="text"
-            placeholder="Enter task title..."
+            name="title"
             value={formData.title}
-            required
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            onChange={handleChange}
             className="form-input"
+            placeholder="Enter task title"
+            required
           />
         </div>
 
         <div className="form-group">
-          <label className="form-label">Description *</label>
+          <label className="form-label">Description</label>
           <textarea
-            placeholder="Describe your task..."
+            name="description"
             value={formData.description}
-            required
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={handleChange}
             className="form-textarea"
+            placeholder="Enter task description"
             rows="4"
           />
         </div>
@@ -105,8 +119,9 @@ function TaskForm({ onTaskAdded, editingTask }) {
           <div className="form-group">
             <label className="form-label">Status</label>
             <select
+              name="status"
               value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              onChange={handleChange}
               className="form-select"
             >
               <option value="To Do">To Do</option>
@@ -118,8 +133,9 @@ function TaskForm({ onTaskAdded, editingTask }) {
           <div className="form-group">
             <label className="form-label">Priority</label>
             <select
+              name="priority"
               value={formData.priority}
-              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              onChange={handleChange}
               className="form-select"
             >
               <option value="Low">Low</option>
@@ -133,21 +149,31 @@ function TaskForm({ onTaskAdded, editingTask }) {
           <label className="form-label">Due Date</label>
           <input
             type="date"
+            name="dueDate"
             value={formData.dueDate}
-            onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+            onChange={handleChange}
             className="form-input"
           />
         </div>
 
         <div className="form-actions">
           <button type="submit" className="submit-btn">
-            {editingTask ? <FaSave /> : <FaPlus />}
-            {editingTask ? 'Update Task' : 'Create Task'}
+            {editingTask ? (
+              <>
+                <FaSave />
+                Update Task
+              </>
+            ) : (
+              <>
+                <FaPlus />
+                Create Task
+              </>
+            )}
           </button>
         </div>
       </form>
     </div>
   );
-}
+};
 
 export default TaskForm;

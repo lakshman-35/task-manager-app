@@ -1,27 +1,11 @@
 const express = require('express');
 const router = express.Router();
-
-// This will be passed from the main server file
-let db;
-let verifyToken;
-
-// Function to initialize the router with database and middleware
-const initializeRouter = (database, tokenVerifier) => {
-  db = database;
-  verifyToken = tokenVerifier;
-  
-  // Apply token verification to all task routes
-  router.use(verifyToken);
-};
-
-// Export both the router and the initialization function
-module.exports = { router, initializeRouter };
+const db = require('../db');
 
 // CREATE
 router.post('/', (req, res) => {
   const { title, description, status, priority, dueDate } = req.body;
   const userId = req.userId;
-  
   const sql = 'INSERT INTO tasks (title, description, status, priority, due_date, user_id) VALUES (?, ?, ?, ?, ?, ?)';
   db.query(sql, [title, description, status, priority, dueDate, userId], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -43,15 +27,12 @@ router.put('/:id', (req, res) => {
   const { title, description, status, priority, dueDate } = req.body;
   const userId = req.userId;
   const taskId = req.params.id;
-  
-  // First check if the task belongs to the user
   const checkOwnershipSQL = 'SELECT * FROM tasks WHERE id = ? AND user_id = ?';
   db.query(checkOwnershipSQL, [taskId, userId], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) {
       return res.status(403).json({ message: 'Access denied' });
     }
-    
     const sql = 'UPDATE tasks SET title=?, description=?, status=?, priority=?, due_date=? WHERE id=? AND user_id=?';
     db.query(sql, [title, description, status, priority, dueDate, taskId, userId], (err) => {
       if (err) return res.status(500).json({ error: err.message });
@@ -64,15 +45,12 @@ router.put('/:id', (req, res) => {
 router.delete('/:id', (req, res) => {
   const userId = req.userId;
   const taskId = req.params.id;
-  
-  // First check if the task belongs to the user
   const checkOwnershipSQL = 'SELECT * FROM tasks WHERE id = ? AND user_id = ?';
   db.query(checkOwnershipSQL, [taskId, userId], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) {
       return res.status(403).json({ message: 'Access denied' });
     }
-    
     db.query('DELETE FROM tasks WHERE id = ? AND user_id = ?', [taskId, userId], (err) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: 'Task deleted' });
