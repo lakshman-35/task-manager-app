@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { FaPlus, FaEdit, FaTrash, FaSearch, FaFilter, FaCheckCircle, FaClock, FaExclamationTriangle, FaListUl } from "react-icons/fa";
 import "./index.css";
@@ -35,7 +35,7 @@ const TaskManager = () => {
     };
   };
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const response = await axios.get("/api/tasks", {
         headers: getAuthHeaders()
@@ -49,7 +49,7 @@ const TaskManager = () => {
         window.location.href = "/login";
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Get user info on component mount
@@ -58,7 +58,7 @@ const TaskManager = () => {
     
     // Fetch user's tasks
     fetchTasks();
-  }, []);
+  }, [fetchTasks]);
 
   const handleTaskAddedOrUpdated = () => {
     setShowForm(false);
