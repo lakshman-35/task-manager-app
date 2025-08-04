@@ -5,9 +5,25 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const taskRoutes = require('./routes/taskRoutes');
 const db = require('./db');
+require('dotenv').config();
 
 const app = express();
-app.use(cors());
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://task-management-frontend-njes.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';

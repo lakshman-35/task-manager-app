@@ -43,7 +43,7 @@ const Home = () => {
             </h1>
             <p className="home-description">
               {user 
-                ? `Welcome back, ${user.fullName}! A Task Management app helps you efficiently create, track, and organize your tasks based on priority and status. It enhances productivity by streamlining task workflows and deadlines.`
+                ? `Welcome, ${user.fullName}! A Task Management app helps you efficiently create, track, and organize your tasks based on priority and status. It enhances productivity by streamlining task workflows and deadlines.`
                 : 'A Task Management app helps users efficiently create, track, and organize their tasks based on priority and status. It enhances productivity by streamlining task workflows and deadlines.'
               }
             </p>

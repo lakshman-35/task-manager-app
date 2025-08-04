@@ -37,7 +37,7 @@ const TaskManager = () => {
 
   const fetchTasks = useCallback(async () => {
     try {
-      const response = await axios.get("/api/tasks", {
+      const response = await axios.get("https://task-manager-app-r5xw.onrender.com/api/tasks", {
         headers: getAuthHeaders()
       });
       setTasks(response.data);
@@ -68,7 +68,7 @@ const TaskManager = () => {
 
   const handleTaskDeleted = async (id) => {
     try {
-      await axios.delete(`/api/tasks/${id}`, {
+      await axios.delete(`https://task-manager-app-r5xw.onrender.com/api/tasks/${id}`, {
         headers: getAuthHeaders()
       });
       fetchTasks();
@@ -187,7 +187,7 @@ const TaskManager = () => {
             </div>
           </div>
 
-          {/* Search and Filter Section */}
+         
           <div className="search-filter-section">
             <div className="search-box">
               <FaSearch className="search-icon" />
