@@ -4,27 +4,13 @@ const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const taskRoutes = require('./routes/taskRoutes');
+const db = require('./db');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-here';
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'taskmate'
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error('MySQL connection error:', err);
-  } else {
-    console.log('Connected to MySQL (taskmate DB)');
-    createTokensTable();
-  }
-});
 
 const createTokensTable = () => {
   const createTableSQL = `
@@ -47,6 +33,9 @@ const createTokensTable = () => {
   });
 };
 
+// Initialize database tables
+createTokensTable();
+
 const generateToken = (userId) => {
   const payload = {
     userId,
@@ -67,20 +56,86 @@ const storeToken = (userId, token) => {
   });
 };
 
+app.get('/api/test', (req, res) => {
+  // Test database connection
+  db.query('SELECT 1 as test', (err, results) => {
+    if (err) {
+      console.error('Database connection test failed:', err);
+      return res.status(500).json({ 
+        message: 'Database connection failed',
+        error: err.message 
+      });
+    }
+    
+    // Test if users table exists
+    db.query('SHOW TABLES LIKE "users"', (err, tables) => {
+      if (err) {
+        console.error('Table check failed:', err);
+        return res.status(500).json({ 
+          message: 'Database table check failed',
+          error: err.message 
+        });
+      }
+      
+      if (tables.length === 0) {
+        return res.status(500).json({ 
+          message: 'Users table not found. Please run database setup.',
+          tables: tables
+        });
+      }
+      
+      res.json({ 
+        message: 'Database connection successful',
+        tables: tables,
+        connection: 'OK'
+      });
+    });
+  });
+});
+
 app.post('/api/register', async (req, res) => {
   const { fullName, email, password } = req.body;
+  
+  // Validate input
+  if (!fullName || !email || !password) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const sql = 'INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)';
-    db.query(sql, [fullName, email, hashedPassword], (err) => {
+    // Check if user already exists
+    const checkUserSQL = 'SELECT * FROM users WHERE email = ?';
+    db.query(checkUserSQL, [email], async (err, results) => {
       if (err) {
-        console.error('Registration error:', err);
-        return res.status(500).json({ message: 'Registration failed' });
+        console.error('Database error checking user:', err);
+        return res.status(500).json({ message: 'Registration failed - database error' });
       }
-      res.status(201).json({ message: 'Registration successful' });
+      
+      if (results.length > 0) {
+        return res.status(409).json({ message: 'User with this email already exists' });
+      }
+
+      // Hash password and create user
+      try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const sql = 'INSERT INTO users (full_name, email, password) VALUES (?, ?, ?)';
+        db.query(sql, [fullName, email, hashedPassword], (err, result) => {
+          if (err) {
+            console.error('Registration error:', err);
+            if (err.code === 'ER_NO_SUCH_TABLE') {
+              return res.status(500).json({ message: 'Database table not found. Please run database setup.' });
+            }
+            return res.status(500).json({ message: 'Registration failed' });
+          }
+          console.log('User registered successfully:', result.insertId);
+          res.status(201).json({ message: 'Registration successful' });
+        });
+      } catch (hashError) {
+        console.error('Password hashing error:', hashError);
+        res.status(500).json({ message: 'Registration failed - password error' });
+      }
     });
   } catch (error) {
-    console.error('Password hashing error:', error);
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Registration failed' });
   }
 });
